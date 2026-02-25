@@ -99,6 +99,7 @@ jobs:
           SSH_KEY: ${{ secrets.PACHI_NODE_SSH_KEY }}
           EXPLORER_IP: ${{ secrets.PACHI_EXPLORER_IP }}
         run: |
+          ssh-keyscan -H $EXPLORER_IP >> ~/.ssh/known_hosts 2>/dev/null
           ssh -i ~/.ssh/id_rsa hyeon@${EXPLORER_IP} << 'REMOTE'
             cd ~/blockscout/docker-compose
             docker compose down -v
