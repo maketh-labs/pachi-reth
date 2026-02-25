@@ -1,0 +1,107 @@
+name: Build & Deploy Pachi Reth
+
+on:
+  push:
+    branches: [pachi]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest-16-cores
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang libclang-dev
+
+      - name: Build reth
+        run: cargo build --release --bin reth
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: pachi-reth
+          path: target/release/reth
+          retention-days: 30
+
+      - name: Create release (on tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/release/reth
+          generate_release_notes: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/pachi'
+
+    steps:
+      - name: Download binary
+        uses: actions/download-artifact@v4
+        with:
+          name: pachi-reth
+
+      - name: Deploy to pachi-node
+        env:
+          SSH_KEY: ${{ secrets.PACHI_NODE_SSH_KEY }}
+          NODE_IP: ${{ secrets.PACHI_NODE_IP }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $NODE_IP >> ~/.ssh/known_hosts 2>/dev/null
+
+          # Upload binary
+          chmod +x reth
+          scp reth hyeon@${NODE_IP}:/tmp/pachi-reth-new
+
+          # Deploy & reset chain
+          ssh hyeon@${NODE_IP} << 'REMOTE'
+            set -e
+
+            # Stop services
+            sudo systemctl stop pachi-reth
+
+            # Replace binary
+            sudo cp /tmp/pachi-reth-new /usr/local/bin/reth
+            rm /tmp/pachi-reth-new
+
+            # Reset chain data
+            rm -rf /home/hyeon/pachi-chain/data
+
+            # Restart reth
+            sudo systemctl start pachi-reth
+
+            echo "✅ Deployed and chain reset complete"
+          REMOTE
+
+      - name: Reset Blockscout
+        env:
+          SSH_KEY: ${{ secrets.PACHI_NODE_SSH_KEY }}
+          EXPLORER_IP: ${{ secrets.PACHI_EXPLORER_IP }}
+        run: |
+          ssh -i ~/.ssh/id_rsa hyeon@${EXPLORER_IP} << 'REMOTE'
+            cd ~/blockscout/docker-compose
+            docker compose down -v
+            docker compose up -d
+            echo "✅ Blockscout reset complete"
+          REMOTE
