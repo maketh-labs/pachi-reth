@@ -6556,6 +6556,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "pachi-hardforks"
+version = "1.11.1"
+dependencies = [
+ "alloy-primitives",
+ "reth-chainspec",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "pachi-primitives"
+version = "1.11.1"
+dependencies = [
+ "alloy-primitives",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "pachi-vrf-core"
+version = "1.11.1"
+dependencies = [
+ "alloy-primitives",
+ "k256",
+ "rand 0.8.5",
+ "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "page_size"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

@@ -1,0 +1,26 @@
+[package]
+name = "pachi-vrf-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Pure ECVRF cryptography for Pachi Chain."
+
+[lints]
+workspace = true
+
+[dependencies]
+# crypto
+k256 = { workspace = true, features = ["ecdsa", "sha256", "arithmetic"] }
+sha2.workspace = true
+rand_08.workspace = true
+
+# ethereum
+alloy-primitives.workspace = true
+
+# misc
+thiserror.workspace = true
+
+[dev-dependencies]

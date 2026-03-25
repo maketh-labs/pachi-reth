@@ -1,0 +1,23 @@
+[package]
+name = "pachi-hardforks"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Pachi Chain hardfork definitions."
+
+[lints]
+workspace = true
+
+[dependencies]
+# ethereum
+reth-chainspec.workspace = true
+alloy-primitives = { workspace = true, features = ["serde"] }
+
+# misc
+serde = { workspace = true, features = ["derive"] }
+
+[dev-dependencies]
+serde_json.workspace = true

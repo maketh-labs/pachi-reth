@@ -155,6 +155,9 @@ members = [
     "testing/testing-utils",
     "testing/runner",
     "crates/tracing-otlp",
+    "crates/pachi/primitives",
+    "crates/pachi/hardforks",
+    "crates/pachi/vrf/core",
 ]
 default-members = ["bin/reth"]
 exclude = ["docs/cli"]
@@ -318,6 +321,11 @@ codegen-units = 1
 incremental = false
 
 [workspace.dependencies]
+# pachi
+pachi-primitives = { path = "crates/pachi/primitives" }
+pachi-hardforks = { path = "crates/pachi/hardforks" }
+pachi-vrf-core = { path = "crates/pachi/vrf/core" }
+
 # reth
 reth = { path = "bin/reth" }
 reth-storage-rpc-provider = { path = "crates/storage/rpc-provider" }

@@ -1,0 +1,23 @@
+[package]
+name = "pachi-primitives"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Shared primitive types for Pachi Chain."
+
+[lints]
+workspace = true
+
+[dependencies]
+# ethereum
+alloy-primitives = { workspace = true, features = ["serde"] }
+
+# misc
+serde = { workspace = true, features = ["derive"] }
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
