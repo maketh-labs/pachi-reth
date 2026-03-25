@@ -8,5 +8,7 @@
 mod config;
 mod hardfork;
 
-pub use config::PachiGenesisConfig;
+pub use config::{
+    OracleGenesisConfig, PachiGenesisConfig, SessionGenesisConfig, SponsorGenesisConfig,
+};
 pub use hardfork::PachiHardfork;

@@ -61,7 +61,7 @@ Crate: `crates/pachi/vrf/core/`
   - [x] `vrf_verify(public_key, seed, random_value, proof) -> bool`
   - [x] Key generation utility
 - [x] Unit tests: compute/verify round-trip, determinism, invalid proof rejection
-- [ ] Benchmark: verify < 1ms target
+- [x] Benchmark: verify < 1ms target
 
 **Acceptance criteria:** Pure crypto functions pass all tests, no I/O dependencies.
 

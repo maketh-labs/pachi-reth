@@ -24,3 +24,8 @@ alloy-primitives.workspace = true
 thiserror.workspace = true
 
 [dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "vrf_bench"
+harness = false

@@ -6580,6 +6580,7 @@ name = "pachi-vrf-core"
 version = "1.11.1"
 dependencies = [
  "alloy-primitives",
+ "codspeed-criterion-compat",
  "k256",
  "rand 0.8.5",
  "sha2",
