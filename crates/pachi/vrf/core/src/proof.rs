@@ -8,7 +8,7 @@ use k256::{elliptic_curve::PrimeField, EncodedPoint, Scalar};
 /// Encodes as: `gamma_compressed (33 bytes) || c (32 bytes) || s (32 bytes)` = 97 bytes.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VrfProof {
-    /// Gamma = sk * H, where H = hash_to_curve(seed). Compressed SEC1 encoding.
+    /// Gamma = sk * H, where H = `hash_to_curve(seed)`. Compressed SEC1 encoding.
     pub gamma: EncodedPoint,
     /// DLEQ challenge scalar.
     pub c: Scalar,

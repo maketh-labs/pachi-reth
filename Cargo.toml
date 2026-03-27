@@ -158,6 +158,10 @@ members = [
     "crates/pachi/primitives",
     "crates/pachi/hardforks",
     "crates/pachi/vrf/core",
+    "crates/pachi/oracle/precompile",
+    "crates/pachi/vrf/precompile",
+    "crates/pachi/session/precompile",
+    "crates/pachi/sponsor/precompile",
 ]
 default-members = ["bin/reth"]
 exclude = ["docs/cli"]
@@ -325,6 +329,10 @@ incremental = false
 pachi-primitives = { path = "crates/pachi/primitives" }
 pachi-hardforks = { path = "crates/pachi/hardforks" }
 pachi-vrf-core = { path = "crates/pachi/vrf/core" }
+pachi-oracle-precompile = { path = "crates/pachi/oracle/precompile" }
+pachi-vrf-precompile = { path = "crates/pachi/vrf/precompile" }
+pachi-session-precompile = { path = "crates/pachi/session/precompile" }
+pachi-sponsor-precompile = { path = "crates/pachi/sponsor/precompile" }
 
 # reth
 reth = { path = "bin/reth" }

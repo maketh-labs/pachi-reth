@@ -1,10 +1,10 @@
 //! ECVRF-SECP256K1-SHA256-TAI implementation.
 //!
 //! Construction:
-//! 1. H = hash_to_curve(pk, seed)  — try-and-increment
+//! 1. H = `hash_to_curve(pk, seed)` — try-and-increment
 //! 2. gamma = sk * H
-//! 3. random_value = SHA256(suite_string || gamma_compressed)
-//! 4. proof = DLEQ(sk, H, gamma)  — proves gamma = sk * H without revealing sk
+//! 3. `random_value` = SHA256(`suite_string` || `gamma_compressed`)
+//! 4. proof = DLEQ(sk, H, gamma) — proves gamma = sk * H without revealing sk
 
 use alloy_primitives::B256;
 use k256::{
@@ -49,7 +49,7 @@ pub fn vrf_compute(secret_key: &[u8; 32], seed: &B256) -> Result<(B256, VrfProof
     // Decode secret key
     let sk = SecretKey::from_bytes(secret_key.into()).map_err(|_| VrfError::InvalidSecretKey)?;
     let sk_nz = sk.to_nonzero_scalar();
-    let sk_scalar: Scalar = sk_nz.as_ref().clone();
+    let sk_scalar: Scalar = *sk_nz.as_ref();
 
     // Derive public key
     let pk_point = ProjectivePoint::GENERATOR * sk_scalar;
@@ -124,8 +124,8 @@ pub fn vrf_verify(
 
 /// Hash-to-try-and-increment: maps (pk, seed) to a curve point.
 ///
-/// For each counter 0..MAX_HASH_ATTEMPTS:
-///   candidate = SHA256(suite || 0x01 || pk_compressed || seed || counter)
+/// For each counter `0..MAX_HASH_ATTEMPTS`:
+///   candidate = SHA256(suite || 0x01 || `pk_compressed` || seed || counter)
 ///   Try to decompress as a secp256k1 point (with 0x02 prefix).
 fn hash_to_curve(pk_encoded: &EncodedPoint, seed: &B256) -> Result<ProjectivePoint, VrfError> {
     for ctr in 0..MAX_HASH_ATTEMPTS {
@@ -142,7 +142,7 @@ fn hash_to_curve(pk_encoded: &EncodedPoint, seed: &B256) -> Result<ProjectivePoi
         compressed[0] = 0x02; // even y-coordinate
         compressed[1..33].copy_from_slice(&hash);
 
-        if let Ok(point_encoded) = EncodedPoint::from_bytes(&compressed) {
+        if let Ok(point_encoded) = EncodedPoint::from_bytes(compressed) {
             let affine_opt = AffinePoint::from_encoded_point(&point_encoded);
             if affine_opt.is_some().into() {
                 let affine: AffinePoint = affine_opt.unwrap();
@@ -166,7 +166,7 @@ fn proof_to_hash(gamma_encoded: &EncodedPoint) -> B256 {
     B256::from_slice(&hash)
 }
 
-/// DLEQ proof generation: proves log_G(pk) == log_H(gamma).
+/// DLEQ proof generation: proves `log_G(pk) == log_H(gamma)`.
 ///
 /// Schnorr-like proof:
 ///   k = random nonce

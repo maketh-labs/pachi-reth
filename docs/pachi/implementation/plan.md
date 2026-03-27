@@ -77,67 +77,69 @@ These crates implement the state read/write logic for each precompile. They do N
 
 Crate: `crates/pachi/oracle/precompile/`
 
-- [ ] Create crate
-- [ ] Implement storage layout (2 slots per asset: price + packed timestamp/confidence)
-- [ ] Implement `get_price(state, asset_id)` -> (price, timestamp, confidence) with staleness check
-- [ ] Implement `get_price_batch(state, asset_ids)` -> Vec<(price, timestamp, confidence)>
-- [ ] Implement `is_supported(asset_id)` -> bool
-- [ ] Implement `apply_oracle_update(state, snapshot)` (write new prices, handle Unavailable)
-- [ ] Implement circuit breaker logic
-- [ ] Gas cost calculation functions
-- [ ] Unit tests for all read/write paths, staleness, circuit breaker, Unavailable handling
+- [x] Create crate
+- [x] Implement storage layout (2 slots per asset: price + packed timestamp/confidence)
+- [x] Implement `get_price(state, asset_id)` -> (price, timestamp, confidence) with staleness check
+- [x] Implement `get_price_batch(state, asset_ids)` -> Vec<(price, timestamp, confidence)>
+- [x] Implement `is_supported(asset_id)` -> bool
+- [x] Implement `apply_oracle_update(state, snapshot)` (write new prices, handle Unavailable)
+- [x] Implement circuit breaker logic
+- [x] Gas cost calculation functions
+- [x] Unit tests for all read/write paths, staleness, circuit breaker, Unavailable handling
 
 #### L1-2: `pachi-vrf-precompile`
 
 Crate: `crates/pachi/vrf/precompile/`
 
-- [ ] Create crate
-- [ ] Implement VRF_COMPUTE precompile logic (system-only access check)
-- [ ] Implement VRF_VERIFY precompile logic (public)
-- [ ] Implement Dealer state machine:
-  - [ ] `request_vrf(state, msg_sender, seed, prepaid_gas)` -> key
-  - [ ] `fulfill(state, key, random_value, proof)` -> Result
-  - [ ] `get_result(state, key)` -> Option<bytes32>
-  - [ ] `is_fulfilled(state, key)` -> bool
-- [ ] Duplicate request rejection (same key)
-- [ ] Gas prepayment and refund logic
-- [ ] Unit tests for full lifecycle, duplicate rejection, access control
+- [x] Create crate
+- [x] Implement VRF_COMPUTE precompile logic (system-only access check)
+- [x] Implement VRF_VERIFY precompile logic (public)
+- [x] Implement Dealer state machine:
+  - [x] `request_vrf(state, msg_sender, seed, prepaid_gas)` -> key
+  - [x] `fulfill(state, key, random_value, proof)` -> Result
+  - [x] `get_result(state, key)` -> Option<bytes32>
+  - [x] `is_fulfilled(state, key)` -> bool
+- [x] Duplicate request rejection (same key)
+- [x] Gas prepayment and refund logic
+- [x] Unit tests for full lifecycle, duplicate rejection, access control
 
 #### L1-3: `pachi-session-precompile`
 
 Crate: `crates/pachi/session/precompile/`
 
-- [ ] Create crate
-- [ ] Implement SessionRegistry state operations:
-  - [ ] `create_session(state, authorizer, config)` -> session_hash
-  - [ ] `revoke_session(state, authorizer, session_hash)` -> Result
-  - [ ] `get_session(state, session_hash)` -> SessionRecord
-  - [ ] `get_active_sessions(state, authorizer)` -> Vec<session_hash>
-  - [ ] `is_valid(state, session_hash, block_timestamp)` -> bool
-- [ ] Slot management (find empty, replace revoked/expired)
-- [ ] Session nonce read/write
-- [ ] Full session validation flow (Steps 1-7 from spec)
-- [ ] Unit tests: create/revoke lifecycle, slot exhaustion/replacement, nonce management, policy validation, constraint checking
+- [x] Create crate
+- [x] Implement SessionRegistry state operations:
+  - [x] `create_session(state, authorizer, config)` -> session_hash
+  - [x] `revoke_session(state, authorizer, session_hash)` -> Result
+  - [x] `get_session(state, session_hash)` -> SessionRecord
+  - [x] `get_active_sessions(state, authorizer)` -> Vec<session_hash>
+  - [x] `is_valid(state, session_hash, block_timestamp)` -> bool
+- [x] Slot management (find empty, replace revoked/expired)
+- [x] Session nonce read/write
+- [x] Full session validation flow (Steps 1-7 from spec)
+- [x] Unit tests: create/revoke lifecycle, slot exhaustion/replacement, nonce management, policy validation, constraint checking
 
 #### L1-4: `pachi-sponsor-precompile`
 
 Crate: `crates/pachi/sponsor/precompile/`
 
-- [ ] Create crate
-- [ ] Implement SponsorHub state operations:
-  - [ ] `register_policy(state, sponsor, config)` -> Result
-  - [ ] `deactivate_policy(state, sponsor)` -> Result
-  - [ ] `deposit(state, sponsor, amount)` -> Result
-  - [ ] `withdraw(state, sponsor, amount)` -> Result
-  - [ ] `approve_mint(state, owner, sponsor)` -> Result
-  - [ ] `revoke_mint(state, owner, sponsor)` -> Result
-  - [ ] `transfer_ownership(state, current_owner, new_owner)` -> Result
-- [ ] View functions (get_balance, get_policy, get_sponsor_type, is_active, can_sponsor)
-- [ ] Dual-mode gas settlement:
-  - [ ] Deposit: balance lock, deduct actual, refund excess
-  - [ ] Mint: compute mint amount from actual gas, no balance ops
-- [ ] Pre-execution sponsor validation flow
-- [ ] Unit tests: registration, deposit/withdraw, mint/deposit mode transitions, governance, settlement for both modes
+- [x] Create crate
+- [x] Implement SponsorHub state operations:
+  - [x] `register_policy(state, sponsor, config)` -> Result
+  - [x] `deactivate_policy(state, sponsor)` -> Result
+  - [x] `deposit(state, sponsor, amount)` -> Result
+  - [x] `withdraw(state, sponsor, amount)` -> Result
+  - [x] `approve_mint(state, owner, sponsor)` -> Result
+  - [x] `revoke_mint(state, owner, sponsor)` -> Result
+  - [x] `transfer_ownership(state, current_owner, new_owner)` -> Result
+- [x] View functions (get_balance, get_policy, get_sponsor_type, is_active, can_sponsor)
+- [x] Dual-mode gas settlement:
+  - [x] Deposit: balance lock, deduct actual, refund excess
+  - [x] Mint: compute mint amount from actual gas, no balance ops
+- [x] Pre-execution sponsor validation flow
+- [x] Unit tests: registration, deposit/withdraw, mint/deposit mode transitions, governance, settlement for both modes
+
+> **Note (L1-4):** Sponsor limit state keys use `keccak256("sponsor_limit", ...)` / `keccak256("sponsor_sender_limit", ...)` instead of the spec's shared `keccak256("limit_state", owner_hash, ...)` pattern. Session system follows the spec pattern. Functionally equivalent (no collision), but should be aligned to the shared pattern in Layer 3 (`pachi-evm`) if consistency is desired. See `crates/pachi/sponsor/precompile/src/storage_keys.rs`.
 
 ---
 

@@ -1,0 +1,25 @@
+[package]
+name = "pachi-oracle-precompile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "PriceOracle precompile state machine for Pachi Chain."
+
+[lints]
+workspace = true
+
+[features]
+test-utils = []
+
+[dependencies]
+# pachi
+pachi-primitives.workspace = true
+
+# ethereum
+alloy-primitives = { workspace = true, features = ["map"] }
+
+# misc
+thiserror.workspace = true

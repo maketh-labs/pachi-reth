@@ -1,0 +1,30 @@
+[package]
+name = "pachi-vrf-precompile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "VRF precompile logic and Dealer state machine for Pachi Chain."
+
+[lints]
+workspace = true
+
+[features]
+test-utils = []
+
+[dependencies]
+# pachi
+pachi-primitives.workspace = true
+pachi-vrf-core.workspace = true
+pachi-oracle-precompile.workspace = true
+
+# ethereum
+alloy-primitives = { workspace = true, features = ["map", "tiny-keccak"] }
+
+# misc
+thiserror.workspace = true
+
+[dev-dependencies]
+pachi-oracle-precompile = { workspace = true, features = ["test-utils"] }
