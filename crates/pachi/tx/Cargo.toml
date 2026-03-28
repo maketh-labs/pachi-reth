@@ -1,0 +1,29 @@
+[package]
+name = "pachi-tx"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Custom transaction types for Pachi Chain (Session, Sponsored, SessionSponsored, System)."
+
+[lints]
+workspace = true
+
+[dependencies]
+# pachi
+pachi-primitives.workspace = true
+
+# ethereum
+alloy-primitives = { workspace = true, features = ["tiny-keccak"] }
+alloy-rlp = { workspace = true, features = ["arrayvec"] }
+alloy-eips.workspace = true
+alloy-consensus = { workspace = true, features = ["k256"] }
+
+# misc
+thiserror.workspace = true
+
+[dev-dependencies]
+k256 = { workspace = true, features = ["ecdsa"] }
+rand_08.workspace = true

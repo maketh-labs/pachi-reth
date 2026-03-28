@@ -151,18 +151,18 @@ Depends on: Layer 0 (`pachi-primitives`).
 
 Crate: `crates/pachi/tx/`
 
-- [ ] Create crate
-- [ ] Define `PachiTxType` enum (Session=0x04, Sponsored=0x05, SessionSponsored=0x06, System=0x50)
-- [ ] Implement `SessionTx` struct + RLP encode/decode
-- [ ] Implement `SponsoredTx` struct + RLP encode/decode
-- [ ] Implement `SessionSponsoredTx` struct + RLP encode/decode
-- [ ] Implement `PachiSystemTx` struct + RLP encode/decode (subtypes: OracleUpdate, VRFfulfill)
-- [ ] Implement EIP-2718 envelope extension (Decodable2718, Encodable)
-- [ ] Implement `alloy_consensus::Transaction` trait for each type
-- [ ] Implement `SignedTransaction` trait (signature recovery) for session/sponsored types
-- [ ] Implement signer recovery for SessionTx (recover session key address, not authorizer)
-- [ ] Unit tests: encode/decode round-trips, signature recovery, invalid envelope rejection
-- [ ] Fuzz tests for RLP decoding (malformed input)
+- [x] Create crate
+- [x] Define `PachiTxType` enum (Session=0x04, Sponsored=0x05, SessionSponsored=0x06, System=0x50)
+- [x] Implement `SessionTx` struct + RLP encode/decode
+- [x] Implement `SponsoredTx` struct + RLP encode/decode
+- [x] Implement `SessionSponsoredTx` struct + RLP encode/decode
+- [x] Implement `PachiSystemTx` struct + RLP encode/decode (subtypes: OracleUpdate, VRFfulfill)
+- [x] Implement EIP-2718 envelope extension (Decodable2718, Encodable)
+- [x] Implement `alloy_consensus::Transaction` trait for each type
+- [x] Implement `SignedTransaction` trait (signature recovery) for session/sponsored types
+- [x] Implement signer recovery for SessionTx (recover session key address, not authorizer)
+- [x] Unit tests: encode/decode round-trips, signature recovery, invalid envelope rejection
+- [x] Fuzz tests for RLP decoding (malformed input)
 
 ---
 

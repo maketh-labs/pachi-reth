@@ -6606,6 +6606,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "pachi-tx"
+version = "1.11.1"
+dependencies = [
+ "alloy-consensus",
+ "alloy-eips",
+ "alloy-primitives",
+ "alloy-rlp",
+ "k256",
+ "pachi-primitives",
+ "rand 0.8.5",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "pachi-vrf-core"
 version = "1.11.1"
 dependencies = [
