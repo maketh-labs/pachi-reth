@@ -22,8 +22,6 @@ impl SessionRegistry {
     ///
     /// - Finds an available slot (empty, revoked, or expired).
     /// - Writes the session record and updates the authorizer's slot array.
-    /// - Returns the session hash.
-    /// Creates a new session.
     ///
     /// Returns `(session_hash, replaced_old_hash)`. If an existing revoked or expired
     /// session slot was reused, `replaced_old_hash` contains the old session hash

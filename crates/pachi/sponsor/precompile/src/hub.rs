@@ -176,7 +176,7 @@ impl SponsorHub {
         state.set_storage(SPONSOR_HUB_ADDRESS, base, U256::from(rlp_buf.len()));
 
         // Store data in 32-byte chunks
-        let num_slots = (rlp_buf.len() + 31) / 32;
+        let num_slots = rlp_buf.len().div_ceil(32);
         for i in 0..num_slots {
             let start = i * 32;
             let end = (start + 32).min(rlp_buf.len());
@@ -201,7 +201,7 @@ impl SponsorHub {
             return None;
         }
 
-        let num_slots = (len + 31) / 32;
+        let num_slots = len.div_ceil(32);
         let mut rlp_buf = Vec::with_capacity(num_slots * 32);
         for i in 0..num_slots {
             let word = state.get_storage(SPONSOR_HUB_ADDRESS, base + U256::from(i + 1));
