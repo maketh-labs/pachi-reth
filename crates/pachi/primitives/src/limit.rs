@@ -1,6 +1,7 @@
 //! Limit model — shared rate-limiting primitive for Session Key and Gas Sponsor systems.
 
 use alloy_primitives::U256;
+use alloy_rlp::{Decodable, Encodable, RlpDecodable, RlpEncodable};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -28,8 +29,25 @@ impl LimitType {
     }
 }
 
+impl Encodable for LimitType {
+    fn encode(&self, out: &mut dyn alloy_rlp::BufMut) {
+        (*self as u8).encode(out);
+    }
+
+    fn length(&self) -> usize {
+        (*self as u8).length()
+    }
+}
+
+impl Decodable for LimitType {
+    fn decode(buf: &mut &[u8]) -> alloy_rlp::Result<Self> {
+        let v = u8::decode(buf)?;
+        Self::from_u8(v).ok_or(alloy_rlp::Error::Custom("invalid LimitType"))
+    }
+}
+
 /// A limit configuration.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, RlpEncodable, RlpDecodable)]
 pub struct Limit {
     /// 0 = Unlimited, 1 = Lifetime, 2 = Allowance.
     pub limit_type: LimitType,
@@ -57,7 +75,9 @@ impl Limit {
 }
 
 /// Mutable on-chain state for a limit.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[derive(
+    Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, Default, RlpEncodable, RlpDecodable,
+)]
 pub struct LimitState {
     /// Amount consumed in the current window or lifetime.
     pub used: U256,

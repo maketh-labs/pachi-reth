@@ -23,6 +23,11 @@ impl SessionRegistry {
     /// - Finds an available slot (empty, revoked, or expired).
     /// - Writes the session record and updates the authorizer's slot array.
     /// - Returns the session hash.
+    /// Creates a new session.
+    ///
+    /// Returns `(session_hash, replaced_old_hash)`. If an existing revoked or expired
+    /// session slot was reused, `replaced_old_hash` contains the old session hash
+    /// (for `SessionReplaced` event emission).
     pub fn create_session(
         state: &mut impl PachiState,
         authorizer: Address,
@@ -31,11 +36,15 @@ impl SessionRegistry {
         session_hash: B256,
         block_timestamp: u64,
         max_sessions: u64,
-    ) -> Result<B256, SessionPrecompileError> {
+    ) -> Result<(B256, Option<B256>), SessionPrecompileError> {
         let max = if max_sessions == 0 { DEFAULT_MAX_SESSIONS_PER_ACCOUNT } else { max_sessions };
 
         // Find a slot
         let slot_index = Self::find_available_slot(state, authorizer, block_timestamp, max)?;
+
+        // Read the old hash before overwriting (for replacement tracking)
+        let old_hash = Self::read_slot(state, authorizer, slot_index);
+        let replaced = if old_hash.is_zero() { None } else { Some(old_hash) };
 
         let record = SessionRecord {
             status: SessionStatus::Active,
@@ -51,7 +60,7 @@ impl SessionRegistry {
         // Write session hash into the slot
         Self::write_slot(state, authorizer, slot_index, session_hash);
 
-        Ok(session_hash)
+        Ok((session_hash, replaced))
     }
 
     /// Revokes a session (irreversible).
@@ -224,7 +233,8 @@ mod tests {
         let hash = test_hash(1);
 
         SessionRegistry::create_session(&mut state, authorizer, test_signer(), 1000, hash, 100, 10)
-            .unwrap();
+            .unwrap()
+            .0;
 
         let record = SessionRegistry::get_session(&state, &hash).unwrap();
         assert_eq!(record.authorizer, authorizer);
@@ -241,7 +251,8 @@ mod tests {
         let hash = test_hash(1);
 
         SessionRegistry::create_session(&mut state, authorizer, test_signer(), 1000, hash, 100, 10)
-            .unwrap();
+            .unwrap()
+            .0;
 
         SessionRegistry::revoke_session(&mut state, authorizer, &hash).unwrap();
 
@@ -257,7 +268,8 @@ mod tests {
         let hash = test_hash(1);
 
         SessionRegistry::create_session(&mut state, authorizer, test_signer(), 1000, hash, 100, 10)
-            .unwrap();
+            .unwrap()
+            .0;
 
         let other = Address::from([0xCCu8; 20]);
         let err = SessionRegistry::revoke_session(&mut state, other, &hash).unwrap_err();
@@ -297,7 +309,8 @@ mod tests {
         let hash = test_hash(1);
         let authorizer = test_authorizer();
         SessionRegistry::create_session(&mut state, authorizer, test_signer(), 1000, hash, 100, 10)
-            .unwrap();
+            .unwrap()
+            .0;
 
         SessionRegistry::revoke_session(&mut state, authorizer, &hash).unwrap();
         assert!(!SessionRegistry::is_valid(&state, &hash, 200));

@@ -174,26 +174,86 @@ Depends on: Layer 1 + Layer 2.
 
 Crate: `crates/pachi/evm/`
 
-- [ ] Create crate
-- [ ] Create `PachiPrecompiles`: register all 5 precompiles into `PrecompilesMap`
-  - [ ] 0x0101 VRF_COMPUTE (delegates to pachi-vrf-precompile)
-  - [ ] 0x0102 VRF_VERIFY
-  - [ ] 0x0800 SessionRegistry
-  - [ ] 0x0801 SponsorHub
-  - [ ] 0x0802 PriceOracle
-- [ ] Create `PachiEvmFactory` implementing `EvmFactory` trait
-- [ ] Create `PachiEvmConfig` implementing `ConfigureEvm` trait
-- [ ] Implement pre-execution handler:
-  - [ ] SessionTx: validate session, check policy, verify signature
-  - [ ] SponsoredTx: validate sponsor, lock balance (Deposit) or check limits (Mint)
-  - [ ] SessionSponsoredTx: session first, then sponsor
-  - [ ] Set msg.sender appropriately per tx type
-- [ ] Implement post-execution handler:
-  - [ ] SessionTx: update nonce, update limits
-  - [ ] SponsoredTx (Deposit): deduct actual gas, refund excess, update limits
-  - [ ] SponsoredTx (Mint): mint native token to sequencer, update limits
-  - [ ] SessionSponsoredTx: session limits + sponsor settlement
-- [ ] Integration tests: execute each tx type through EVM, verify state changes
+- [x] Create crate
+- [x] Create `PachiPrecompiles`: register all 5 precompiles into `PrecompilesMap`
+  - [x] 0x0101 VRF_COMPUTE (delegates to pachi-vrf-precompile)
+  - [x] 0x0102 VRF_VERIFY
+  - [x] 0x0800 SessionRegistry
+  - [x] 0x0801 SponsorHub
+  - [x] 0x0802 PriceOracle
+- [x] Create `PachiEvmFactory` implementing `EvmFactory` trait
+- [x] Create `PachiEvmConfig` implementing `ConfigureEvm` trait
+- [x] Implement pre-execution handler:
+  - [x] SessionTx: validate session, check policy, verify signature
+  - [x] SponsoredTx: validate sponsor, lock balance (Deposit) or check limits (Mint)
+  - [x] SessionSponsoredTx: session first, then sponsor
+  - [x] Set msg.sender appropriately per tx type
+- [x] Implement post-execution handler:
+  - [x] SessionTx: update nonce, update limits
+  - [x] SponsoredTx (Deposit): deduct actual gas, refund excess, update limits
+  - [x] SponsoredTx (Mint): mint native token to sequencer, update limits
+  - [x] SessionSponsoredTx: session limits + sponsor settlement
+- [x] Integration tests: execute each tx type through EVM, verify state changes
+
+> **Note (L3-1): Implementation Details for Layer 4+ Consumers**
+>
+> **Architecture:**
+> - `PachiEvmConfig` is a drop-in replacement for `EthEvmConfig`. Usage: `PachiEvmConfig::new(chain_spec)`.
+> - `PachiEvmFactory` adds 5 precompiles on top of `Precompiles::prague()` via `DynPrecompile::new_stateful`.
+> - `EvmStateBridge` wraps `EvmInternals` in `RefCell` to bridge `PachiState` ↔ revm journaled state.
+> - All precompiles have full `EvmInternals` access (sload/sstore/log) through `PrecompileInput.internals`.
+>
+> **Handlers are NOT wired into the executor — Layer 4 must do this:**
+> - `PreExecutionHandler` and `PostExecutionHandler` are pure functions on `&impl PachiState`.
+> - Layer 4 (`pachi-payload`) must:
+>   1. Detect custom tx types (0x04, 0x05, 0x06) in the executor pipeline.
+>   2. Call `PreExecutionHandler::validate_*` before EVM execution.
+>   3. Set `TxEnv.caller` to `authorizer` for SessionTx/SessionSponsoredTx.
+>   4. Call `PostExecutionHandler::finalize_*` after EVM execution.
+>   5. For `SettlementAction::MintRequired`, mint native tokens to fee recipient.
+>   6. For `PachiSystemTx` (0x50), execute with gas_price=0 and sender=SYSTEM_ADDRESS.
+>   7. Deduct SessionTx 15,000 gas overhead from gas_limit.
+>   8. Emit `Sponsored` event after sponsor settlement (not emitted by L3 precompile).
+>
+> **Precompile function coverage (spec vs implementation):**
+>
+> | Precompile | Spec functions | Implemented | Notes |
+> |-----------|---------------|-------------|-------|
+> | PriceOracle (0x0802) | 3 | 3 (100%) | ABI matches Solidity interface |
+> | VRF_COMPUTE (0x0101) | 1 | 1 (100%) | Phase 1: raw secret_key + seed |
+> | VRF_VERIFY (0x0102) | 1 | 1 (100%) | Fixed 33-byte compressed pubkey |
+> | SessionRegistry (0x0800) | 5 | 5 (100%) | createSession uses decomposed params (hash-only model) |
+> | SponsorHub (0x0801) | 13 | 13+1 (100%) | +getValidUntil extra. registerPolicy accepts RLP |
+>
+> **SponsorConfig on-chain storage:**
+> - `registerPolicy(bytes)` accepts RLP-encoded full `SponsorConfig` (allowed_senders, call_policies, transfer_policies, all limits, valid_until).
+> - 5 scalar fields at `keccak256("sponsor_record", sponsor) + offset` (status, type, balance, created_at, valid_until).
+> - Full config as RLP blob at `keccak256("sponsor_config", sponsor) + offset` (slot 0 = byte length, slot 1..N = data).
+> - `getPolicy(address)` returns stored RLP bytes. `canSponsor(...)` deserializes and runs `SponsorValidator`.
+> - RLP Encodable/Decodable implemented for all primitives + sponsor types. Client SDK must RLP-encode.
+>
+> **Event coverage:**
+> - SessionRegistry: `SessionCreated` ✅, `SessionRevoked` ✅, `SessionReplaced` ✅ (emitted when slot replacement occurs during createSession).
+> - SponsorHub: `Deposited` ✅, `Withdrawn` ✅, `PolicyRegistered` ✅, `PolicyDeactivated` ✅, `MintApproved` ✅, `MintRevoked` ✅, `OwnershipTransferred` ✅, `Sponsored` ❌ (Layer 4 responsibility — emitted per-tx after sponsor settlement).
+>
+> **Function selectors:** All computed as `keccak256(canonical_signature)[:4]`. See dispatch file constants.
+>
+> **`getPriceBatch` ABI:** Returns `(uint256[], uint64[], uint8[])` as three separate dynamic arrays with proper offset/length encoding.
+>
+> **Sponsor limit key deviation (from L1-4):**
+> - Session: `keccak256("limit_state", session_hash, context)` (spec pattern).
+> - Sponsor: `keccak256("sponsor_limit", sponsor, context)` / `keccak256("sponsor_sender_limit", sponsor, sender, context)`.
+> - No collision. Alignment deferred to future if unified limit dashboard needed.
+>
+> **L1 visibility changes made in L3:**
+> - `pachi_session_precompile::storage_keys` module → `pub` (was `pub(crate)`). `SessionValidationInput`, `limit_state_key` added to exports.
+> - `pachi_sponsor_precompile`: `SponsorConfig`, `SponsorCallPolicy`, `SponsorTransferPolicy` added to exports.
+> - `pachi_primitives`: `alloy-rlp` dependency added. `RlpEncodable`/`RlpDecodable` derives on `Limit`, `LimitState`, `Constraint`, `CallPolicy`, `TransferPolicy`.
+> - `pachi_sponsor_precompile`: `alloy-rlp` dependency added. RLP derives on `SponsorConfig`, `SponsorCallPolicy`, `SponsorTransferPolicy`, `SponsorRecord`. `GAS_SPONSOR_DEACTIVATE` (10,000) added.
+>
+> **Design decisions for Phase 1:**
+> - VRF_COMPUTE takes raw `(secret_key: bytes32, seed: bytes32)` instead of spec's `(secret_key_index, seed)`. Phase 1 sequencer holds the key in process directly. Phase 2 will change to threshold VRF format.
+> - SessionRegistry `createSession(address,uint64,bytes32)` takes decomposed params instead of spec's `createSession(SessionConfig)`. This matches the "hash-only storage" model where full config stays off-chain and only the hash is on-chain. The client computes `session_hash = keccak256(abi.encode(authorizer, config))` before calling.
 
 ---
 
@@ -224,8 +284,15 @@ Crate: `crates/pachi/oracle/engine/`
 
 Crate: `crates/pachi/payload/`
 
+> **Dependency on L3:** Use `PachiEvmConfig` instead of `EthEvmConfig` when creating the executor. The custom tx type routing (SessionTx/SponsoredTx/SessionSponsoredTx pre/post handlers) must be integrated into the payload builder's transaction execution loop. See `pachi_evm::handlers::{PreExecutionHandler, PostExecutionHandler}`.
+
 - [ ] Create crate
 - [ ] Implement `PachiPayloadBuilder` wrapping `EthereumPayloadBuilder`
+- [ ] Wire custom tx type handling into execution loop:
+  - [ ] Before executing SessionTx/SponsoredTx/SessionSponsoredTx: call PreExecutionHandler
+  - [ ] Modify TxEnv.caller to authorizer for SessionTx/SessionSponsoredTx
+  - [ ] After execution: call PostExecutionHandler, handle SettlementAction::MintRequired
+  - [ ] Deduct SessionTx 15,000 gas overhead from gas_limit
 - [ ] After user tx execution:
   - [ ] Scan receipts/logs for VRF requestVRF events
   - [ ] For each request: call VRF_COMPUTE, generate fulfill system tx
@@ -259,6 +326,8 @@ Crate: `crates/pachi/consensus/`
 
 Crate: `crates/pachi/pool/`
 
+> **Dependency on L3:** Pool validation can reuse L3's `PreExecutionHandler` for policy checks, or call L1 validators directly (`SessionValidator`, `SponsorValidator`). The pool does NOT need `EvmStateBridge` — it reads state from the provider, not from `EvmInternals`. Create a `ProviderStateBridge` that implements `PachiState` over the reth storage provider for pool-level validation.
+
 - [ ] Create crate
 - [ ] SessionTx mempool validation:
   - [ ] Session exists and is Active
@@ -283,6 +352,8 @@ Crate: `crates/pachi/pool/`
 Depends on: all layers.
 
 #### L5-1: `pachi-node`
+
+> **Dependency on L3:** `PachiNode` should use `PachiEvmConfig` as the EVM type. The `ExecutorBuilder` implementation returns `PachiEvmConfig::new(chain_spec)`. See `examples/custom-evm/src/main.rs` for the pattern.
 
 Crate: `crates/pachi/node/`
 

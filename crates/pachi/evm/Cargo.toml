@@ -1,0 +1,59 @@
+[package]
+name = "pachi-evm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "EVM configuration for Pachi Chain: precompile registration and custom tx handlers."
+
+[lints]
+workspace = true
+
+[dependencies]
+# pachi
+pachi-primitives.workspace = true
+pachi-oracle-precompile.workspace = true
+pachi-vrf-precompile.workspace = true
+pachi-session-precompile.workspace = true
+pachi-sponsor-precompile.workspace = true
+
+# reth
+reth-chainspec.workspace = true
+reth-ethereum-forks.workspace = true
+reth-ethereum-primitives.workspace = true
+reth-evm.workspace = true
+reth-evm-ethereum.workspace = true
+reth-primitives-traits.workspace = true
+
+# alloy
+alloy-evm.workspace = true
+alloy-primitives = { workspace = true, features = ["map", "tiny-keccak"] }
+alloy-consensus.workspace = true
+
+# revm
+revm.workspace = true
+
+# encoding
+alloy-rlp = { workspace = true, features = ["arrayvec"] }
+
+# misc
+thiserror.workspace = true
+
+[dev-dependencies]
+pachi-oracle-precompile = { workspace = true, features = ["test-utils"] }
+alloy-genesis.workspace = true
+
+[features]
+default = ["std"]
+std = [
+    "alloy-consensus/std",
+    "alloy-primitives/std",
+    "alloy-evm/std",
+    "reth-chainspec/std",
+    "reth-ethereum-forks/std",
+    "reth-evm/std",
+    "reth-ethereum-primitives/std",
+    "revm/std",
+]

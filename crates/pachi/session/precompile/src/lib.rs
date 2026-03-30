@@ -11,7 +11,7 @@ mod nonce;
 mod record;
 mod registry;
 mod slots;
-mod storage_keys;
+pub mod storage_keys;
 mod validation;
 
 pub use error::SessionPrecompileError;
@@ -19,5 +19,5 @@ pub use gas::*;
 pub use nonce::SessionNonce;
 pub use record::{SessionRecord, SessionStatus};
 pub use registry::SessionRegistry;
-pub use storage_keys::SESSION_REGISTRY_ADDRESS;
-pub use validation::SessionValidator;
+pub use storage_keys::{limit_state_key, SESSION_REGISTRY_ADDRESS};
+pub use validation::{SessionValidationInput, SessionValidator};

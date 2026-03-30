@@ -6557,6 +6557,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "pachi-evm"
+version = "1.11.1"
+dependencies = [
+ "alloy-consensus",
+ "alloy-evm",
+ "alloy-genesis",
+ "alloy-primitives",
+ "alloy-rlp",
+ "pachi-oracle-precompile",
+ "pachi-primitives",
+ "pachi-session-precompile",
+ "pachi-sponsor-precompile",
+ "pachi-vrf-precompile",
+ "reth-chainspec",
+ "reth-ethereum-forks",
+ "reth-ethereum-primitives",
+ "reth-evm",
+ "reth-evm-ethereum",
+ "reth-primitives-traits",
+ "revm",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "pachi-hardforks"
 version = "1.11.1"
 dependencies = [
@@ -6580,6 +6604,7 @@ name = "pachi-primitives"
 version = "1.11.1"
 dependencies = [
  "alloy-primitives",
+ "alloy-rlp",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6600,6 +6625,7 @@ name = "pachi-sponsor-precompile"
 version = "1.11.1"
 dependencies = [
  "alloy-primitives",
+ "alloy-rlp",
  "pachi-oracle-precompile",
  "pachi-primitives",
  "thiserror 2.0.18",

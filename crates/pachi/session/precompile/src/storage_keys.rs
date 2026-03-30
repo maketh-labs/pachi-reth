@@ -35,7 +35,7 @@ pub(crate) fn session_nonce_key(authorizer: Address, session_hash: &B256) -> U25
 /// Computes a limit state storage key.
 ///
 /// `keccak256("limit_state", owner_hash, limit_context, limit_index)`
-pub(crate) fn limit_state_key(owner_hash: &B256, limit_context: &[u8], limit_index: u8) -> U256 {
+pub fn limit_state_key(owner_hash: &B256, limit_context: &[u8], limit_index: u8) -> U256 {
     let hash = keccak256(
         [b"limit_state".as_slice(), owner_hash.as_slice(), limit_context, &[limit_index]].concat(),
     );

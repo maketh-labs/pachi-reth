@@ -9,6 +9,9 @@ pub const GAS_SPONSOR_OVERHEAD_MINT: u64 = 15_000;
 /// Gas cost for policy registration.
 pub const GAS_SPONSOR_REGISTER: u64 = 100_000;
 
+/// Gas cost for policy deactivation.
+pub const GAS_SPONSOR_DEACTIVATE: u64 = 10_000;
+
 /// Gas cost for deposit.
 pub const GAS_SPONSOR_DEPOSIT: u64 = 20_000;
 

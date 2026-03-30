@@ -1,6 +1,7 @@
 //! Sponsor record types.
 
 use alloy_primitives::{Address, FixedBytes, U256};
+use alloy_rlp::{Decodable, Encodable, RlpDecodable, RlpEncodable};
 use pachi_primitives::{Constraint, Limit};
 
 /// Sponsor type (deposit or mint).
@@ -21,6 +22,23 @@ impl SponsorType {
             1 => Some(Self::Mint),
             _ => None,
         }
+    }
+}
+
+impl Encodable for SponsorType {
+    fn encode(&self, out: &mut dyn alloy_rlp::BufMut) {
+        (*self as u8).encode(out);
+    }
+
+    fn length(&self) -> usize {
+        (*self as u8).length()
+    }
+}
+
+impl Decodable for SponsorType {
+    fn decode(buf: &mut &[u8]) -> alloy_rlp::Result<Self> {
+        let v = u8::decode(buf)?;
+        Self::from_u8(v).ok_or(alloy_rlp::Error::Custom("invalid SponsorType"))
     }
 }
 
@@ -45,8 +63,25 @@ impl SponsorStatus {
     }
 }
 
+impl Encodable for SponsorStatus {
+    fn encode(&self, out: &mut dyn alloy_rlp::BufMut) {
+        (*self as u8).encode(out);
+    }
+
+    fn length(&self) -> usize {
+        (*self as u8).length()
+    }
+}
+
+impl Decodable for SponsorStatus {
+    fn decode(buf: &mut &[u8]) -> alloy_rlp::Result<Self> {
+        let v = u8::decode(buf)?;
+        Self::from_u8(v).ok_or(alloy_rlp::Error::Custom("invalid SponsorStatus"))
+    }
+}
+
 /// Call policy for sponsors.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, RlpEncodable, RlpDecodable)]
 pub struct SponsorCallPolicy {
     /// Target contract address.
     pub target: Address,
@@ -57,7 +92,7 @@ pub struct SponsorCallPolicy {
 }
 
 /// Transfer policy for sponsors.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, RlpEncodable, RlpDecodable)]
 pub struct SponsorTransferPolicy {
     /// Transfer recipient.
     pub target: Address,
@@ -65,8 +100,8 @@ pub struct SponsorTransferPolicy {
     pub max_value_per_tx: U256,
 }
 
-/// Sponsor configuration (stored on-chain).
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Sponsor configuration (stored on-chain as RLP blob).
+#[derive(Debug, Clone, PartialEq, Eq, RlpEncodable, RlpDecodable)]
 pub struct SponsorConfig {
     /// Allowed senders (empty = anyone).
     pub allowed_senders: Vec<Address>,
@@ -89,7 +124,7 @@ pub struct SponsorConfig {
 }
 
 /// On-chain sponsor record.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, RlpEncodable, RlpDecodable)]
 pub struct SponsorRecord {
     /// Sponsor status.
     pub status: SponsorStatus,

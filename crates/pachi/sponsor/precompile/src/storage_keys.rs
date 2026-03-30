@@ -19,6 +19,15 @@ pub(crate) fn sponsor_record_key(sponsor: Address) -> U256 {
     U256::from_be_bytes(hash.0)
 }
 
+/// Storage base key for a sponsor's RLP-encoded config blob.
+///
+/// `keccak256("sponsor_config", sponsor_address)`
+/// Slot layout: base+0 = byte length, base+1..N = RLP data (32 bytes per slot).
+pub(crate) fn sponsor_config_key(sponsor: Address) -> U256 {
+    let hash = keccak256([b"sponsor_config".as_slice(), sponsor.as_slice()].concat());
+    U256::from_be_bytes(hash.0)
+}
+
 /// Global limit state key for a sponsor.
 ///
 /// `keccak256("sponsor_limit", sponsor, limit_context)`

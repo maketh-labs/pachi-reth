@@ -1,6 +1,7 @@
 //! Constraint model — per-argument verification for call policies.
 
 use alloy_primitives::{Bytes, B256, U256};
+use alloy_rlp::{Decodable, Encodable, RlpDecodable, RlpEncodable};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -42,8 +43,25 @@ impl ConditionType {
     }
 }
 
+impl Encodable for ConditionType {
+    fn encode(&self, out: &mut dyn alloy_rlp::BufMut) {
+        (*self as u8).encode(out);
+    }
+
+    fn length(&self) -> usize {
+        (*self as u8).length()
+    }
+}
+
+impl Decodable for ConditionType {
+    fn decode(buf: &mut &[u8]) -> alloy_rlp::Result<Self> {
+        let v = u8::decode(buf)?;
+        Self::from_u8(v).ok_or(alloy_rlp::Error::Custom("invalid ConditionType"))
+    }
+}
+
 /// A constraint on a single calldata argument.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, RlpEncodable, RlpDecodable)]
 pub struct Constraint {
     /// Calldata argument index (0-based).
     pub index: u8,

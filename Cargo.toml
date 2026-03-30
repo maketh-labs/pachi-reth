@@ -163,6 +163,7 @@ members = [
     "crates/pachi/session/precompile",
     "crates/pachi/sponsor/precompile",
     "crates/pachi/tx",
+    "crates/pachi/evm",
 ]
 default-members = ["bin/reth"]
 exclude = ["docs/cli"]
@@ -335,6 +336,7 @@ pachi-vrf-precompile = { path = "crates/pachi/vrf/precompile" }
 pachi-session-precompile = { path = "crates/pachi/session/precompile" }
 pachi-sponsor-precompile = { path = "crates/pachi/sponsor/precompile" }
 pachi-tx = { path = "crates/pachi/tx" }
+pachi-evm = { path = "crates/pachi/evm" }
 
 # reth
 reth = { path = "bin/reth" }

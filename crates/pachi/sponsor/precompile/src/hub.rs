@@ -5,11 +5,13 @@
 use alloy_primitives::{Address, U256};
 use pachi_oracle_precompile::PachiState;
 
+use alloy_rlp::{Decodable, Encodable};
+
 use crate::{
     error::SponsorPrecompileError,
     governance::SponsorGovernance,
     record::{SponsorConfig, SponsorStatus, SponsorType},
-    storage_keys::{sponsor_record_key, SPONSOR_HUB_ADDRESS},
+    storage_keys::{sponsor_config_key, sponsor_record_key, SPONSOR_HUB_ADDRESS},
 };
 
 /// Slot offsets within a sponsor record.
@@ -70,6 +72,9 @@ impl SponsorHub {
             base + VALID_UNTIL_OFFSET,
             U256::from(config.valid_until),
         );
+
+        // Store full config as RLP blob
+        Self::store_config(state, sponsor, config);
 
         Ok(())
     }
@@ -155,6 +160,56 @@ impl SponsorHub {
     pub fn get_valid_until(state: &impl PachiState, sponsor: Address) -> u64 {
         let base = sponsor_record_key(sponsor);
         state.get_storage(SPONSOR_HUB_ADDRESS, base + VALID_UNTIL_OFFSET).as_limbs()[0]
+    }
+
+    /// Stores the full `SponsorConfig` as an RLP-encoded blob across storage slots.
+    ///
+    /// Layout at `keccak256("sponsor_config", sponsor)`:
+    /// - slot+0: byte length of the RLP data
+    /// - slot+1..N: RLP bytes (32 bytes per slot, zero-padded)
+    fn store_config(state: &mut impl PachiState, sponsor: Address, config: &SponsorConfig) {
+        let base = sponsor_config_key(sponsor);
+        let mut rlp_buf = Vec::new();
+        config.encode(&mut rlp_buf);
+
+        // Store length
+        state.set_storage(SPONSOR_HUB_ADDRESS, base, U256::from(rlp_buf.len()));
+
+        // Store data in 32-byte chunks
+        let num_slots = (rlp_buf.len() + 31) / 32;
+        for i in 0..num_slots {
+            let start = i * 32;
+            let end = (start + 32).min(rlp_buf.len());
+            let mut word = [0u8; 32];
+            word[..end - start].copy_from_slice(&rlp_buf[start..end]);
+            state.set_storage(
+                SPONSOR_HUB_ADDRESS,
+                base + U256::from(i + 1),
+                U256::from_be_bytes(word),
+            );
+        }
+    }
+
+    /// Loads the full `SponsorConfig` from on-chain RLP blob.
+    ///
+    /// Returns `None` if no config is stored or RLP decoding fails.
+    pub fn load_config(state: &impl PachiState, sponsor: Address) -> Option<SponsorConfig> {
+        let base = sponsor_config_key(sponsor);
+        let len_val = state.get_storage(SPONSOR_HUB_ADDRESS, base);
+        let len: usize = len_val.try_into().ok()?;
+        if len == 0 {
+            return None;
+        }
+
+        let num_slots = (len + 31) / 32;
+        let mut rlp_buf = Vec::with_capacity(num_slots * 32);
+        for i in 0..num_slots {
+            let word = state.get_storage(SPONSOR_HUB_ADDRESS, base + U256::from(i + 1));
+            rlp_buf.extend_from_slice(&word.to_be_bytes::<32>());
+        }
+        rlp_buf.truncate(len);
+
+        SponsorConfig::decode(&mut rlp_buf.as_slice()).ok()
     }
 
     /// Ensures a sponsor exists.

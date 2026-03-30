@@ -19,7 +19,10 @@ pub use error::SponsorPrecompileError;
 pub use gas::*;
 pub use governance::SponsorGovernance;
 pub use hub::SponsorHub;
-pub use record::{SponsorRecord, SponsorStatus, SponsorType};
+pub use record::{
+    SponsorCallPolicy, SponsorConfig, SponsorRecord, SponsorStatus, SponsorTransferPolicy,
+    SponsorType,
+};
 pub use settlement::{SettlementAction, SponsorSettlement};
 pub use storage_keys::SPONSOR_HUB_ADDRESS;
 pub use validation::{SponsorValidationInput, SponsorValidator};

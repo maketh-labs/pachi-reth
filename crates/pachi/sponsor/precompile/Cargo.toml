@@ -20,7 +20,8 @@ pachi-primitives.workspace = true
 pachi-oracle-precompile.workspace = true
 
 # ethereum
-alloy-primitives = { workspace = true, features = ["map", "tiny-keccak"] }
+alloy-primitives = { workspace = true, features = ["map", "tiny-keccak", "rlp"] }
+alloy-rlp = { workspace = true, features = ["arrayvec", "derive"] }
 
 # misc
 thiserror.workspace = true

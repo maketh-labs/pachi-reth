@@ -1,12 +1,13 @@
 //! Session call and transfer policy types.
 
 use alloy_primitives::{Address, FixedBytes, U256};
+use alloy_rlp::{RlpDecodable, RlpEncodable};
 use serde::{Deserialize, Serialize};
 
 use crate::{Constraint, Limit};
 
 /// A whitelisted contract function call within a session.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, RlpEncodable, RlpDecodable)]
 pub struct CallPolicy {
     /// Target contract address.
     pub target: Address,
@@ -21,7 +22,7 @@ pub struct CallPolicy {
 }
 
 /// A whitelisted native transfer within a session.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, RlpEncodable, RlpDecodable)]
 pub struct TransferPolicy {
     /// Transfer recipient.
     pub target: Address,
