@@ -1,0 +1,46 @@
+[package]
+name = "pachi-payload"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Pachi Chain payload builder: custom tx handling and system tx injection."
+
+[lints]
+workspace = true
+
+[dependencies]
+# pachi
+pachi-primitives.workspace = true
+pachi-tx.workspace = true
+pachi-oracle-precompile.workspace = true
+pachi-vrf-precompile.workspace = true
+pachi-vrf-core.workspace = true
+pachi-oracle-engine.workspace = true
+
+# reth
+reth-chainspec.workspace = true
+reth-evm.workspace = true
+reth-ethereum-primitives.workspace = true
+reth-basic-payload-builder.workspace = true
+reth-ethereum-payload-builder.workspace = true
+reth-payload-builder.workspace = true
+reth-transaction-pool.workspace = true
+reth-storage-api.workspace = true
+
+# alloy
+alloy-primitives = { workspace = true, features = ["map"] }
+alloy-rlp.workspace = true
+
+# serialization
+serde_json.workspace = true
+
+# misc
+tracing.workspace = true
+
+[dev-dependencies]
+
+[features]
+default = []

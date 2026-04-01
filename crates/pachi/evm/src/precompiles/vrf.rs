@@ -10,7 +10,7 @@ use revm::precompile::{PrecompileOutput, PrecompileResult};
 
 use pachi_vrf_precompile::{GAS_VRF_COMPUTE, GAS_VRF_VERIFY};
 
-/// VRF_COMPUTE precompile (0x0101).
+/// `VRF_COMPUTE` precompile (0x0101).
 ///
 /// System-only. Takes `abi.encode(secret_key_bytes32, seed_bytes32)` and returns
 /// `abi.encode(random_value_bytes32, proof_bytes)`.
@@ -50,7 +50,7 @@ pub(crate) fn vrf_compute_precompile(input: PrecompileInput<'_>) -> PrecompileRe
     }
 }
 
-/// VRF_VERIFY precompile (0x0102).
+/// `VRF_VERIFY` precompile (0x0102).
 ///
 /// Public. Takes `abi.encode(public_key_33bytes, seed_bytes32, random_value_bytes32, proof_bytes)`
 /// and returns `abi.encode(valid: bool)`.

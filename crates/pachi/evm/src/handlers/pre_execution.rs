@@ -16,19 +16,19 @@ use pachi_sponsor_precompile::{
 /// Result of pre-execution validation and setup.
 #[derive(Debug, Clone)]
 pub enum PreExecutionResult {
-    /// SessionTx: session validated, msg.sender should be set to authorizer.
+    /// `SessionTx`: session validated, msg.sender should be set to authorizer.
     Session {
         /// The authorizer whose address becomes msg.sender.
         authorizer: Address,
     },
-    /// SponsoredTx: sponsor validated, gas balance locked (for Deposit mode).
+    /// `SponsoredTx`: sponsor validated, gas balance locked (for Deposit mode).
     Sponsored {
         /// Sponsor address.
         sponsor: Address,
         /// Amount locked from sponsor balance (0 for Mint mode).
         locked_amount: U256,
     },
-    /// SessionSponsoredTx: both session and sponsor validated.
+    /// `SessionSponsoredTx`: both session and sponsor validated.
     SessionSponsored {
         /// The authorizer whose address becomes msg.sender.
         authorizer: Address,
@@ -72,7 +72,7 @@ impl PreExecutionHandler {
     ///
     /// Steps:
     /// 1. Validate sponsor (active, policy, limits)
-    /// 2. For Deposit mode: lock max_gas_cost from sponsor balance
+    /// 2. For Deposit mode: lock `max_gas_cost` from sponsor balance
     /// 3. For Mint mode: only check limits (no balance lock)
     pub fn validate_sponsored_tx(
         state: &mut impl PachiState,

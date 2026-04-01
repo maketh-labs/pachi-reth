@@ -40,10 +40,7 @@ pub(crate) fn write_session_record(
 /// Reads a session record from state.
 ///
 /// Returns `None` if the session doesn't exist (all zero storage).
-pub(crate) fn read_session_record(
-    state: &impl PachiState,
-    session_hash: &B256,
-) -> Option<SessionRecord> {
+pub fn read_session_record(state: &impl PachiState, session_hash: &B256) -> Option<SessionRecord> {
     let base = session_record_key(session_hash);
     let addr = SESSION_REGISTRY_ADDRESS;
 

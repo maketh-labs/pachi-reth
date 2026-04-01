@@ -161,16 +161,58 @@ Layer 5: node, rpc, genesis  (deps: all)
 
 ## Development Workflow
 
+### MANDATORY: Implementation Protocol
+
+**This protocol is NON-NEGOTIABLE. Every layer/crate implementation MUST follow it. No exceptions.**
+
+#### Before coding
+
+1. **Read MEMORY.md** and all referenced memory files. Apply every rule.
+2. **Read EVERY relevant spec doc** (`docs/pachi/specs/`) line-by-line.
+3. **Count and record** the exact number of functions, events, gas costs, and validation rules in the spec.
+4. Write down: "Spec requires X functions, Y events, Z validation rules."
+5. Read existing Layer code that this layer depends on — understand the ACTUAL API.
+
+#### During coding
+
+6. Implement ALL items from the spec. Never defer any without explicit user approval.
+7. For each function: verify gas cost, ABI encoding, error handling match the spec.
+8. Never use "simplified", "deferred", or "placeholder" implementations. If the spec says to do it, do it fully.
+9. If something is genuinely impossible at this layer, explain the EXACT technical reason — not "it's complex."
+
+#### Before marking done (3-stage delivery)
+
+10. **Stage 1 — Implement**: All code and tests.
+11. **Stage 2 — Self-audit**: Cross-reference spec docs against code. Count: implemented vs spec. Must match.
+12. **Stage 3 — Report**: Present a spec cross-reference table to the user. Never say "done" without this table.
+
+**Checklist format for the report:**
+
+```
+| Spec Item | Implemented | Status | If ⚠️, exact technical reason |
+```
+
+Only mark `plan.md` checkboxes `[x]` for items that are FULLY implemented. Items deferred to a later layer stay `[ ]` with a note explaining why.
+
+#### What counts as "done"
+
+- ✅ "Compiles + tests pass + spec table matches 100%" = done
+- ❌ "Compiles + basic tests pass" = NOT done
+- ❌ "Deferred to Layer N+1 because it's complex" = NOT acceptable
+- ✅ "Cannot implement at this layer because `default_ethereum_payload()` owns the BlockBuilder and doesn't expose hook points" = acceptable (with the explanation)
+
 ### Working Incrementally Across Sessions
 
 Work is tracked in `docs/pachi/implementation/plan.md`. Each session:
 
 1. **Read plan.md** to find the next unchecked task.
 2. **Read the relevant spec** under `docs/pachi/specs/`.
-3. **Implement** the task.
-4. **Self-review**: Run `cargo +nightly fmt --all && cargo +nightly clippy -p <crate> -- -D warnings`.
-5. **Test**: Run `cargo nextest run -p <crate>` and ensure all tests pass.
-6. **Mark done**: Update the checkbox in `plan.md` to `[x]`.
+3. **Read MEMORY.md** and apply all stored rules.
+4. **Implement** the task following the Implementation Protocol above.
+5. **Self-review**: Run `cargo +nightly fmt --all && cargo +nightly clippy -p <crate> -- -D warnings`.
+6. **Test**: Run `cargo nextest run -p <crate>` and ensure all tests pass.
+7. **Self-audit**: Cross-reference spec vs code, produce spec table.
+8. **Mark done**: Update the checkbox in `plan.md` to `[x]` ONLY for fully implemented items.
 
 ### Creating a New Pachi Crate
 

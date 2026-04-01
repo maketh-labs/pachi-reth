@@ -1,0 +1,47 @@
+[package]
+name = "pachi-consensus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Pachi Chain consensus: custom block validation for oracle updates, VRF ordering, and custom tx types."
+
+[lints]
+workspace = true
+
+[dependencies]
+# pachi
+pachi-primitives.workspace = true
+pachi-tx.workspace = true
+
+# reth
+reth-consensus.workspace = true
+reth-ethereum-consensus.workspace = true
+reth-chainspec.workspace = true
+reth-ethereum-forks.workspace = true
+reth-primitives-traits.workspace = true
+reth-execution-types.workspace = true
+
+# alloy
+alloy-primitives = { workspace = true, features = ["map", "tiny-keccak"] }
+alloy-rlp.workspace = true
+
+# serialization
+serde_json.workspace = true
+
+# misc
+tracing.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+
+[features]
+default = ["std"]
+std = [
+    "alloy-primitives/std",
+    "reth-consensus/std",
+    "reth-chainspec/std",
+    "reth-ethereum-forks/std",
+]

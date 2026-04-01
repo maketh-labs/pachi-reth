@@ -1,4 +1,4 @@
-//! SessionRegistry precompile dispatch (0x0800).
+//! `SessionRegistry` precompile dispatch (0x0800).
 //!
 //! Routes ABI-encoded calls to the session state machine.
 //!
@@ -28,7 +28,7 @@ const SEL_GET_SESSION: FixedBytes<4> = FixedBytes::new([0x39, 0xb2, 0x40, 0xbd])
 const SEL_GET_ACTIVE_SESSIONS: FixedBytes<4> = FixedBytes::new([0x80, 0xea, 0x53, 0xde]);
 const SEL_IS_VALID: FixedBytes<4> = FixedBytes::new([0x6a, 0x93, 0x85, 0x67]);
 
-/// SessionRegistry precompile entry point.
+/// `SessionRegistry` precompile entry point.
 pub(crate) fn session_registry_precompile(input: PrecompileInput<'_>) -> PrecompileResult {
     let data = input.data;
     if data.len() < 4 {

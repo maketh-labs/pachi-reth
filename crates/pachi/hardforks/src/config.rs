@@ -29,7 +29,7 @@ mod serde_u128_string {
 /// Pachi-specific genesis configuration.
 ///
 /// Embedded in the genesis `extra_fields` under `"pachiConfig"`.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PachiGenesisConfig {
     /// Session key system configuration.
@@ -44,18 +44,6 @@ pub struct PachiGenesisConfig {
     /// Block number or timestamp at which Phase 2 activates (0 = not scheduled).
     #[serde(default)]
     pub phase2_block: u64,
-}
-
-impl Default for PachiGenesisConfig {
-    fn default() -> Self {
-        Self {
-            session_config: SessionGenesisConfig::default(),
-            sponsor_config: SponsorGenesisConfig::default(),
-            oracle_config: OracleGenesisConfig::default(),
-            phase1_block: 0,
-            phase2_block: 0,
-        }
-    }
 }
 
 /// Session key system genesis parameters.

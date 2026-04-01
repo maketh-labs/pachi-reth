@@ -164,6 +164,10 @@ members = [
     "crates/pachi/sponsor/precompile",
     "crates/pachi/tx",
     "crates/pachi/evm",
+    "crates/pachi/oracle/engine",
+    "crates/pachi/payload",
+    "crates/pachi/consensus",
+    "crates/pachi/pool",
 ]
 default-members = ["bin/reth"]
 exclude = ["docs/cli"]
@@ -337,6 +341,10 @@ pachi-session-precompile = { path = "crates/pachi/session/precompile" }
 pachi-sponsor-precompile = { path = "crates/pachi/sponsor/precompile" }
 pachi-tx = { path = "crates/pachi/tx" }
 pachi-evm = { path = "crates/pachi/evm" }
+pachi-oracle-engine = { path = "crates/pachi/oracle/engine" }
+pachi-payload = { path = "crates/pachi/payload" }
+pachi-consensus = { path = "crates/pachi/consensus" }
+pachi-pool = { path = "crates/pachi/pool" }
 
 # reth
 reth = { path = "bin/reth" }

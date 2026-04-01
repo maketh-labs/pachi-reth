@@ -1,0 +1,37 @@
+[package]
+name = "pachi-oracle-engine"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Oracle engine: WebSocket price collection, aggregation, and snapshot generation for Pachi Chain."
+
+[lints]
+workspace = true
+
+[dependencies]
+# pachi
+pachi-primitives.workspace = true
+
+# alloy
+alloy-primitives = { workspace = true, features = ["std"] }
+
+# async
+tokio = { workspace = true, features = ["rt", "sync", "time", "macros"] }
+tokio-tungstenite = { workspace = true, features = ["native-tls"] }
+futures.workspace = true
+
+# serialization
+serde_json.workspace = true
+
+# misc
+tracing.workspace = true
+parking_lot.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time", "test-util"] }
+
+[features]
+default = []

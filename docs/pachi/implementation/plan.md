@@ -265,20 +265,20 @@ Depends on: Layer 3.
 
 Crate: `crates/pachi/oracle/engine/`
 
-- [ ] Create crate
-- [ ] Implement WebSocket connection manager (5 sources)
-  - [ ] Binance WS connector
-  - [ ] Coinbase WS connector
-  - [ ] OKX WS connector
-  - [ ] Bybit WS connector
-  - [ ] Kraken WS connector
-- [ ] Implement reconnection logic with backoff
-- [ ] Implement Aggregator (staleness filter -> outlier trim -> median -> confidence)
-- [ ] Implement Local Price State (per-asset AssetState)
-- [ ] Implement `generate_snapshot()` -> PriceSnapshot for block building
-- [ ] Implement heartbeat (1s aggregation cycle)
-- [ ] Unit tests: aggregator with various source scenarios
-- [ ] Integration tests: mock WebSocket sources, verify snapshot generation
+- [x] Create crate
+- [x] Implement WebSocket connection manager (5 sources)
+  - [x] Binance WS connector
+  - [x] Coinbase WS connector
+  - [x] OKX WS connector
+  - [x] Bybit WS connector
+  - [x] Kraken WS connector
+- [x] Implement reconnection logic with backoff
+- [x] Implement Aggregator (staleness filter -> outlier trim -> median -> confidence)
+- [x] Implement Local Price State (per-asset AssetState)
+- [x] Implement `generate_snapshot()` -> PriceSnapshot for block building
+- [x] Implement heartbeat (1s aggregation cycle)
+- [x] Unit tests: aggregator with various source scenarios
+- [x] Integration tests: mock WebSocket sources, verify snapshot generation
 
 #### L4-2: `pachi-payload`
 
@@ -286,41 +286,77 @@ Crate: `crates/pachi/payload/`
 
 > **Dependency on L3:** Use `PachiEvmConfig` instead of `EthEvmConfig` when creating the executor. The custom tx type routing (SessionTx/SponsoredTx/SessionSponsoredTx pre/post handlers) must be integrated into the payload builder's transaction execution loop. See `pachi_evm::handlers::{PreExecutionHandler, PostExecutionHandler}`.
 
-- [ ] Create crate
-- [ ] Implement `PachiPayloadBuilder` wrapping `EthereumPayloadBuilder`
+- [x] Create crate
+- [x] Implement `PachiPayloadBuilder` wrapping `EthereumPayloadBuilder`
 - [ ] Wire custom tx type handling into execution loop:
   - [ ] Before executing SessionTx/SponsoredTx/SessionSponsoredTx: call PreExecutionHandler
   - [ ] Modify TxEnv.caller to authorizer for SessionTx/SessionSponsoredTx
   - [ ] After execution: call PostExecutionHandler, handle SettlementAction::MintRequired
   - [ ] Deduct SessionTx 15,000 gas overhead from gas_limit
+  > **Blocked:** `default_ethereum_payload()` creates and owns the `BlockBuilder` internally. The tx execution loop is a monolithic closure with no hook points. These require a custom executor pipeline in L5 (`PachiExecutorBuilder`) that wraps the block executor with pre/post hooks per transaction.
 - [ ] After user tx execution:
   - [ ] Scan receipts/logs for VRF requestVRF events
-  - [ ] For each request: call VRF_COMPUTE, generate fulfill system tx
+  > **Blocked:** Receipt/log access requires executor pipeline integration (receipts are available only after `BlockBuilder::finish()`).
+  - [x] For each request: call VRF_COMPUTE, generate fulfill system tx (`SystemTxGenerator::vrf_fulfill_tx()`)
   - [ ] Verify fulfill tx is positioned after its request tx
-- [ ] Generate OracleUpdate system tx from Oracle Engine snapshot
+- [x] Generate OracleUpdate system tx from Oracle Engine snapshot (`SystemTxGenerator::oracle_update_tx()`)
 - [ ] Append system txs at block end (VRF fulfills first, then OracleUpdate)
-- [ ] Handle edge cases: no VRF requests, all oracle sources down
+  > **Blocked:** Requires `BlockBuilder::execute_transaction()` call before `finish()`. Only accessible in L5 custom executor.
+- [x] Handle edge cases: no VRF requests, all oracle sources down
 - [ ] Integration tests: build blocks with VRF requests, verify system tx injection
+
+> **Note (L4-2): What's done and what's blocked**
+>
+> **Done (L4):**
+> - `PachiPayloadBuilder` struct wrapping `EthereumPayloadBuilder` with `Arc<OracleEngine>` and `SystemTxGenerator`.
+> - `SystemTxGenerator::oracle_update_tx(engine, nonce)` → JSON-serialized `PriceSnapshot`.
+> - `SystemTxGenerator::vrf_fulfill_tx(key, seed, nonce)` → VRF compute + proof bytes.
+> - `SystemTxGenerator::encode_system_tx(tx)` → EIP-2718 typed envelope.
+>
+> **Blocked (needs L5 custom executor):**
+> - Pre/post execution handler calls for custom tx types (0x04, 0x05, 0x06).
+> - System tx injection into the actual block body.
+> - VRF request event scanning from receipts.
+> - The technical reason: reth's `default_ethereum_payload()` is a monolithic function that creates and owns the `BlockBuilder`. The `PayloadBuilder::try_build()` trait method can only call this function — it cannot inject hooks into the tx execution loop. L5's `PachiExecutorBuilder` must create a custom executor that wraps each tx execution with pre/post hooks.
 
 #### L4-3: `pachi-consensus`
 
 Crate: `crates/pachi/consensus/`
 
-- [ ] Create crate
-- [ ] Implement `PachiConsensus` wrapping `EthBeaconConsensus`
-- [ ] `validate_block_pre_execution`:
-  - [ ] OracleUpdate system tx must exist
-  - [ ] All supported assets present in OracleUpdate
-  - [ ] No unsupported assets
-  - [ ] Engine version match
-  - [ ] Per-asset validation (tolerance check, timestamp check)
-  - [ ] VRF fulfill ordering (each fulfill after its request)
+- [x] Create crate
+- [x] Implement `PachiConsensus` wrapping `EthBeaconConsensus`
+- [x] `validate_block_pre_execution`:
+  - [x] OracleUpdate system tx must exist
+  - [x] All supported assets present in OracleUpdate
+  - [x] No unsupported assets
+  - [x] Engine version match
+  - [x] Per-asset validation (zero price/timestamp sanity checks)
+  - [ ] Per-asset tolerance check (VALIDATION_TOLERANCE_BPS=100)
+  > **Phase 2:** Tolerance check requires each validator to run its own oracle engine and compare prices. Phase 1 single-sequencer trust model skips this.
+  - [x] VRF fulfill ordering (each fulfill after its request)
   - [ ] VRF fulfill only for successful requestVRF txs
-  - [ ] Custom tx type validation (SessionTx, SponsoredTx structure)
+  > **Blocked:** Pre-execution validation cannot check tx success — receipts are only available post-execution. Must be validated in `validate_block_post_execution`.
+  - [x] Custom tx type validation (SessionTx, SponsoredTx structure)
 - [ ] `validate_block_post_execution`:
   - [ ] Oracle state correctly applied
   - [ ] VRF results correctly stored
-- [ ] Unit tests: valid/invalid block scenarios, missing OracleUpdate, wrong ordering
+  > **Blocked:** Pachi-specific post-execution checks require reading precompile storage slots from the executed state. Needs `StateProvider` access in the `FullConsensus::validate_block_post_execution` context. Currently delegates to Ethereum base validation only.
+- [x] Unit tests: valid/invalid block scenarios, missing OracleUpdate, wrong ordering
+
+> **Note (L4-3): What's done and what's blocked**
+>
+> **Done (L4):**
+> - `PachiConsensus` wraps `EthBeaconConsensus` — all Ethereum validation delegated, Pachi rules added.
+> - Pre-execution: system tx ordering, OracleUpdate existence/uniqueness, snapshot content (engine version, asset coverage, per-asset sanity: zero price/timestamp rejected), VRF fulfill before OracleUpdate.
+> - Error types: `PachiConsensusError` with 9 variants (including `VrfFulfillAfterOracleUpdate`, `InvalidAssetPrice`).
+> - 7 unit tests covering: valid snapshot, all-unavailable, wrong version, missing asset, zero price, zero timestamp, mixed entries.
+>
+> **L5 (needs executor context):**
+> - VRF fulfill for successful-only requests: needs post-execution receipt access.
+> - Post-execution oracle/VRF state verification: needs `StateProvider` in `validate_block_post_execution` context.
+>
+> **Phase 2:**
+> - Per-asset tolerance check (`VALIDATION_TOLERANCE_BPS` = 100bps): requires each validator's own oracle engine data.
 
 #### L4-4: `pachi-pool`
 
@@ -328,28 +364,100 @@ Crate: `crates/pachi/pool/`
 
 > **Dependency on L3:** Pool validation can reuse L3's `PreExecutionHandler` for policy checks, or call L1 validators directly (`SessionValidator`, `SponsorValidator`). The pool does NOT need `EvmStateBridge` — it reads state from the provider, not from `EvmInternals`. Create a `ProviderStateBridge` that implements `PachiState` over the reth storage provider for pool-level validation.
 
-- [ ] Create crate
-- [ ] SessionTx mempool validation:
-  - [ ] Session exists and is Active
-  - [ ] Session not expired
+- [x] Create crate
+- [x] SessionTx mempool validation:
+  - [x] Session exists and is Active
+  - [x] Session not expired
   - [ ] Signer signature valid
-  - [ ] Session nonce correct
+  > **Not needed at pool level:** `ecrecover` is performed by reth's `EthTransactionValidator` during tx deserialization. Pool validator receives already-recovered sender. Session key → authorizer mapping is checked via `read_session_record()`.
+  - [x] Session nonce correct
   - [ ] Policy compliance (target, selector, constraints, limits)
+  > **Deferred to block building:** Full policy validation requires parsing the `session_config` bytes from the tx body and running `SessionValidator::validate()`. Pool-level validation is intentionally lightweight (existence + expiry + nonce) to avoid expensive RLP decode + storage reads per mempool insertion. Full validation runs in `PreExecutionHandler` at block building time.
   - [ ] Fee limit not exceeded
-- [ ] SponsoredTx mempool validation:
-  - [ ] Sponsor active
-  - [ ] Policy valid
-  - [ ] Sender allowed
-  - [ ] Balance sufficient (Deposit) or limits OK (Mint)
-- [ ] SessionSponsoredTx: combined validation
+  > **Same reason:** Fee limit check requires `session_config` parsing.
+- [x] SponsoredTx mempool validation:
+  - [x] Sponsor active
+  - [ ] Policy valid (target/selector check)
+  > **Deferred to block building:** Requires RLP-decoding the on-chain `SponsorConfig` and matching against the tx's `to`/`data`. Pool-level checks existence + balance only.
+  - [ ] Sender allowed (allowed_senders check)
+  > **Same reason:** Requires `SponsorConfig` decode.
+  - [x] Balance sufficient (Deposit) or limits OK (Mint)
+- [x] SessionSponsoredTx: combined validation
 - [ ] Session nonce-based ordering
-- [ ] Unit tests: acceptance/rejection scenarios for each tx type
+  > **Requires `TransactionOrdering` trait impl:** Pool ordering is configured at pool creation time in L5 (`pachi-node`). The `PachiPoolValidator` validates nonces but doesn't control ordering priority.
+- [x] Unit tests: acceptance/rejection scenarios for each tx type
+
+> **Note (L4-4): What's done and what's blocked**
+>
+> **Done (L4):**
+> - `ProviderStateBridge`: read-only `PachiState` over `StateProviderBox`.
+> - `PachiPoolValidator::validate_session_tx()`: existence, active, expiry, authorizer, nonce.
+> - `PachiPoolValidator::validate_sponsored_tx()`: existence (`created_at != 0`), active, expiry, balance.
+> - `PachiPoolValidator::validate_session_sponsored_tx()`: combined.
+> - 10 unit tests covering accept/reject scenarios.
+>
+> **Intentionally lightweight (not blocked, design decision):**
+> - Policy compliance (target/selector/constraints): requires RLP decoding `session_config` or `SponsorConfig`. Pool validation prioritizes throughput — full validation runs at block building in `PreExecutionHandler`.
+> - Signer signature: already handled by reth's `EthTransactionValidator` during tx deserialization.
+> - Session nonce ordering: requires `TransactionOrdering` trait impl, configured in L5.
+>
+> **L1 visibility changes made in L4:**
+> - `pachi_session_precompile::storage_keys`: all functions `pub(crate)` → `pub`.
+> - `pachi_session_precompile::slots::read_session_record`: `pub(crate)` → `pub`, exported from lib.
+> - `pachi_sponsor_precompile::storage_keys`: module `pub(crate)` → `pub`, all functions `pub`.
 
 ---
 
 ### Layer 5: Node Assembly
 
 Depends on: all layers.
+
+> **L4→L5 Handoff: Getting Started Guide**
+>
+> Before implementing L5, read these files to understand the APIs you'll be wiring together:
+>
+> **1. Custom executor pipeline (pre/post handlers):**
+> - `pachi_evm::PreExecutionHandler` (`crates/pachi/evm/src/handlers/pre_execution.rs`)
+>   - `validate_session_tx(state: &impl PachiState, input: &SessionValidationInput) -> Result<PreExecutionResult, PreExecutionError>`
+>   - `validate_sponsored_tx(state: &mut impl PachiState, validation, config, max_gas_cost) -> Result<PreExecutionResult, PreExecutionError>`
+>   - `validate_session_sponsored_tx(state, session_input, sponsor_input, sponsor_config, max_gas_cost) -> Result<PreExecutionResult, PreExecutionError>`
+> - `pachi_evm::PostExecutionHandler` (`crates/pachi/evm/src/handlers/post_execution.rs`)
+>   - `finalize_session_tx(state, authorizer, session_hash, actual_gas_cost, block_timestamp, fee_limit, to, calldata, value, call_policies, transfer_policies) -> PostExecutionResult`
+>   - `finalize_sponsored_tx(state, sponsor, sender, actual_gas_cost, locked_amount, block_timestamp, config) -> Result<PostExecutionResult, SponsorPrecompileError>`
+>   - `finalize_session_sponsored_tx(...)` — combined
+> - `PreExecutionResult` has variants: `Session { authorizer }`, `Sponsored { sponsor, locked_amount }`, `SessionSponsored { authorizer, sponsor, locked_amount }`
+> - `PostExecutionResult` has `settlement: Option<SettlementAction>` — for `MintRequired { amount }`, mint native tokens to fee recipient
+>
+> **2. System tx generation:**
+> - `pachi_payload::SystemTxGenerator` (`crates/pachi/payload/src/system_tx.rs`)
+>   - `new(chain_id: u64)` → `with_vrf_secret_key(key: [u8; 32])`
+>   - `oracle_update_tx(&self, engine: &OracleEngine, nonce: u64) -> PachiSystemTx`
+>   - `vrf_fulfill_tx(&self, key: B256, seed: B256, nonce: u64) -> Option<PachiSystemTx>`
+>   - `encode_system_tx(tx: &PachiSystemTx) -> Bytes`
+>
+> **3. Oracle engine:**
+> - `pachi_oracle_engine::OracleEngine` (`crates/pachi/oracle/engine/src/engine.rs`)
+>   - `new()` → `start()` — spawns background WS connectors + heartbeat
+>   - `generate_snapshot() -> PriceSnapshot` — always returns valid snapshot (all Unavailable if sources down)
+>
+> **4. Consensus:**
+> - `pachi_consensus::PachiConsensus` (`crates/pachi/consensus/src/lib.rs`)
+>   - `new(chain_spec: Arc<ChainSpec>)` — wraps `EthBeaconConsensus`, adds Pachi validation
+>
+> **5. Pool validation:**
+> - `pachi_pool::PachiPoolValidator` (`crates/pachi/pool/src/validator.rs`)
+>   - `validate_session_tx(state, session_hash, authorizer, nonce, block_timestamp)`
+>   - `validate_sponsored_tx(state, sponsor, block_timestamp, estimated_gas_cost)`
+> - `pachi_pool::ProviderStateBridge` — wraps `StateProviderBox` as read-only `PachiState`
+>
+> **6. Tx types to detect:**
+> - `pachi_tx::PachiTxType::Session` (0x04), `Sponsored` (0x05), `SessionSponsored` (0x06), `System` (0x50)
+> - Use `PachiTxType::is_pachi_type(tx.ty())` to check
+>
+> **Key reth examples to reference:**
+> - `examples/custom-evm/src/main.rs` — custom EVM config pattern
+> - `examples/custom-node-components/src/main.rs` — custom pool builder pattern
+> - `crates/ethereum/node/src/` — EthereumNode as reference for PachiNode
 
 #### L5-1: `pachi-node`
 
@@ -364,7 +472,27 @@ Crate: `crates/pachi/node/`
 - [ ] Implement `PachiConsensusBuilder` -> returns `PachiConsensus`
 - [ ] Wire all components via `ComponentsBuilder`
 - [ ] Add Oracle Engine startup to node lifecycle
+- [ ] **Custom executor pipeline for Pachi tx types (carried from L4):**
+  - [ ] Detect custom tx types (0x04, 0x05, 0x06) in executor
+  - [ ] Call `PreExecutionHandler::validate_session_tx` / `validate_sponsored_tx` / `validate_session_sponsored_tx` before EVM execution
+  - [ ] Set `TxEnv.caller` to authorizer for SessionTx/SessionSponsoredTx
+  - [ ] Call `PostExecutionHandler::finalize_*` after EVM execution
+  - [ ] For `SettlementAction::MintRequired`, mint native tokens to fee recipient
+  - [ ] Deduct SessionTx 15,000 gas overhead from gas_limit
+  - [ ] Emit `Sponsored` event after sponsor settlement
+- [ ] **System tx injection into blocks (carried from L4):**
+  - [ ] After user tx execution, scan receipts/logs for VRF `requestVRF` events
+  - [ ] For each request: call `SystemTxGenerator::vrf_fulfill_tx()`, execute via `BlockBuilder::execute_transaction()`
+  - [ ] Call `SystemTxGenerator::oracle_update_tx()`, execute as last tx in block
+  - [ ] Verify ordering: VRF fulfills before OracleUpdate, all after user txs
+- [ ] **Post-execution consensus checks (carried from L4):**
+  - [ ] In `validate_block_post_execution`: verify oracle precompile storage matches OracleUpdate snapshot
+  - [ ] In `validate_block_post_execution`: verify VRF results correctly stored for each fulfill
+  - [ ] VRF fulfill only for successful requestVRF txs (check receipts)
 - [ ] Integration test: start node, produce blocks, verify system txs
+- [ ] Integration test: SessionTx lifecycle (create session → execute via session key → verify authorizer as msg.sender)
+- [ ] Integration test: SponsoredTx lifecycle (register sponsor → deposit → sponsor tx → verify settlement)
+- [ ] Integration test: VRF lifecycle (requestVRF → fulfill in same block → verify result)
 
 #### L5-2: `pachi-rpc`
 

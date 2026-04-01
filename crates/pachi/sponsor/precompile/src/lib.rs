@@ -12,7 +12,7 @@ mod governance;
 mod hub;
 mod record;
 mod settlement;
-mod storage_keys;
+pub mod storage_keys;
 mod validation;
 
 pub use error::SponsorPrecompileError;

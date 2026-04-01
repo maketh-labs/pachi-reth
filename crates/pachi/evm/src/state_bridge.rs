@@ -18,7 +18,7 @@ pub(crate) struct EvmStateBridge<'a> {
 
 impl<'a> EvmStateBridge<'a> {
     /// Creates a new bridge, taking ownership of the EVM internals.
-    pub(crate) fn new(internals: EvmInternals<'a>) -> Self {
+    pub(crate) const fn new(internals: EvmInternals<'a>) -> Self {
         Self { internals: RefCell::new(internals) }
     }
 
@@ -36,16 +36,12 @@ impl<'a> EvmStateBridge<'a> {
 
 impl PachiState for EvmStateBridge<'_> {
     fn get_storage(&self, address: Address, slot: U256) -> U256 {
-        self.internals
-            .borrow_mut()
-            .sload(address, slot.into())
-            .map(|v| v.data)
-            .unwrap_or(U256::ZERO)
+        self.internals.borrow_mut().sload(address, slot).map(|v| v.data).unwrap_or(U256::ZERO)
     }
 
     fn set_storage(&mut self, address: Address, slot: U256, value: U256) {
         // Errors from sstore (e.g., DB errors) are non-recoverable at the precompile level.
         // The EVM catches these and reverts the transaction.
-        let _ = self.internals.borrow_mut().sstore(address, slot.into(), value.into());
+        let _ = self.internals.borrow_mut().sstore(address, slot, value);
     }
 }

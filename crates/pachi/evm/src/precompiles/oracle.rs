@@ -1,4 +1,4 @@
-//! PriceOracle precompile dispatch (0x0802).
+//! `PriceOracle` precompile dispatch (0x0802).
 //!
 //! Routes ABI-encoded calls to the oracle state machine. All functions are read-only.
 //!
@@ -25,7 +25,7 @@ const SEL_GET_PRICE_BATCH: FixedBytes<4> = FixedBytes::new([0xbc, 0x34, 0x83, 0x
 /// `isSupported(uint8)` → `keccak256("isSupported(uint8)")[:4]`
 const SEL_IS_SUPPORTED: FixedBytes<4> = FixedBytes::new([0x5a, 0x80, 0x3a, 0x54]);
 
-/// PriceOracle precompile entry point.
+/// `PriceOracle` precompile entry point.
 pub(crate) fn oracle_precompile(input: PrecompileInput<'_>) -> PrecompileResult {
     let data = input.data;
     if data.len() < 4 {

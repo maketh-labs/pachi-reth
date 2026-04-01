@@ -19,5 +19,6 @@ pub use gas::*;
 pub use nonce::SessionNonce;
 pub use record::{SessionRecord, SessionStatus};
 pub use registry::SessionRegistry;
+pub use slots::read_session_record;
 pub use storage_keys::{limit_state_key, SESSION_REGISTRY_ADDRESS};
 pub use validation::{SessionValidationInput, SessionValidator};

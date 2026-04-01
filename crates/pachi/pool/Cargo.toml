@@ -1,0 +1,37 @@
+[package]
+name = "pachi-pool"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+description = "Pachi Chain transaction pool: custom validation for SessionTx, SponsoredTx, and SessionSponsoredTx."
+
+[lints]
+workspace = true
+
+[dependencies]
+# pachi
+pachi-tx.workspace = true
+pachi-oracle-precompile.workspace = true
+pachi-session-precompile.workspace = true
+pachi-sponsor-precompile.workspace = true
+
+# reth
+reth-storage-api.workspace = true
+
+# alloy
+alloy-primitives = { workspace = true, features = ["map", "tiny-keccak"] }
+
+# misc
+thiserror.workspace = true
+
+[dev-dependencies]
+pachi-oracle-precompile = { workspace = true, features = ["test-utils"] }
+
+[features]
+default = ["std"]
+std = [
+    "alloy-primitives/std",
+]

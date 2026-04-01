@@ -29,6 +29,7 @@ impl PostExecutionHandler {
     /// 2. Update fee limit state
     /// 3. Update call/transfer value limit states
     /// 4. Update constraint limit states
+    #[allow(clippy::too_many_arguments)]
     pub fn finalize_session_tx(
         state: &mut impl PachiState,
         authorizer: Address,

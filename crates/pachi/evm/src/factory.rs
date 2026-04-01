@@ -16,11 +16,11 @@ use crate::precompiles::pachi_precompiles;
 /// Custom EVM factory that creates EVM instances with all Pachi precompiles registered.
 ///
 /// Extends the standard Ethereum precompiles with:
-/// - `0x0101` VRF_COMPUTE (system-only)
-/// - `0x0102` VRF_VERIFY (public)
-/// - `0x0800` SessionRegistry (stateful)
-/// - `0x0801` SponsorHub (stateful)
-/// - `0x0802` PriceOracle (stateful reads, system writes)
+/// - `0x0101` `VRF_COMPUTE` (system-only)
+/// - `0x0102` `VRF_VERIFY` (public)
+/// - `0x0800` `SessionRegistry` (stateful)
+/// - `0x0801` `SponsorHub` (stateful)
+/// - `0x0802` `PriceOracle` (stateful reads, system writes)
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub struct PachiEvmFactory;

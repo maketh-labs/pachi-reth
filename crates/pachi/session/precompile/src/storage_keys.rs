@@ -9,7 +9,7 @@ pub const SESSION_REGISTRY_ADDRESS: Address =
 /// Computes the storage key for a session record.
 ///
 /// `keccak256("session_record", session_hash)`
-pub(crate) fn session_record_key(session_hash: &B256) -> U256 {
+pub fn session_record_key(session_hash: &B256) -> U256 {
     let hash = keccak256([b"session_record".as_slice(), session_hash.as_slice()].concat());
     U256::from_be_bytes(hash.0)
 }
@@ -17,7 +17,7 @@ pub(crate) fn session_record_key(session_hash: &B256) -> U256 {
 /// Computes the storage key for session slots (per authorizer).
 ///
 /// `keccak256("session_slots", authorizer)`
-pub(crate) fn session_slots_key(authorizer: Address) -> U256 {
+pub fn session_slots_key(authorizer: Address) -> U256 {
     let hash = keccak256([b"session_slots".as_slice(), authorizer.as_slice()].concat());
     U256::from_be_bytes(hash.0)
 }
@@ -25,7 +25,7 @@ pub(crate) fn session_slots_key(authorizer: Address) -> U256 {
 /// Computes the storage key for a session nonce.
 ///
 /// `keccak256("session_nonce", authorizer, session_hash)`
-pub(crate) fn session_nonce_key(authorizer: Address, session_hash: &B256) -> U256 {
+pub fn session_nonce_key(authorizer: Address, session_hash: &B256) -> U256 {
     let hash = keccak256(
         [b"session_nonce".as_slice(), authorizer.as_slice(), session_hash.as_slice()].concat(),
     );

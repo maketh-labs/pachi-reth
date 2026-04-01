@@ -1,4 +1,4 @@
-//! SponsorHub precompile dispatch (0x0801).
+//! `SponsorHub` precompile dispatch (0x0801).
 //!
 //! Routes ABI-encoded calls to the sponsor state machine. Governance functions
 //! are owner-only and verified within the Layer 1 code.
@@ -8,7 +8,7 @@
 //!
 //! # Selectors (keccak256 of canonical signature)
 //!
-//! - `registerPolicy(bytes)` → `0xa2ea1376` (RLP-encoded SponsorConfig)
+//! - `registerPolicy(bytes)` → `0xa2ea1376` (RLP-encoded `SponsorConfig`)
 //! - `deactivatePolicy()` → `0x8634f7a8`
 //! - `deposit()` → `0xd0e30db0`
 //! - `withdraw(uint256)` → `0x2e1a7d4d`
@@ -51,7 +51,7 @@ const SEL_APPROVE_MINT: FixedBytes<4> = FixedBytes::new([0x0e, 0x80, 0x1e, 0xe1]
 const SEL_REVOKE_MINT: FixedBytes<4> = FixedBytes::new([0x39, 0x35, 0xba, 0xc6]);
 const SEL_TRANSFER_OWNERSHIP: FixedBytes<4> = FixedBytes::new([0xf2, 0xfd, 0xe3, 0x8b]);
 
-/// SponsorHub precompile entry point.
+/// `SponsorHub` precompile entry point.
 pub(crate) fn sponsor_hub_precompile(input: PrecompileInput<'_>) -> PrecompileResult {
     let data = input.data;
     if data.len() < 4 {
@@ -366,11 +366,7 @@ fn revert(gas: u64, msg: &[u8]) -> PrecompileResult {
 
 /// Helper: require at least 32 bytes of args (for address parameter).
 fn require_addr(args: &[u8], gas: u64) -> Option<PrecompileResult> {
-    if args.len() < 32 {
-        Some(revert(gas, b"input too short"))
-    } else {
-        None
-    }
+    (args.len() < 32).then(|| revert(gas, b"input too short"))
 }
 
 /// Helper: ABI-encode a bool as 32-byte word.
